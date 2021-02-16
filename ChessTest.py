@@ -19,12 +19,14 @@ class RandomPlayer(object):
 
         return random_move
 
-realtimeboard = chess.Board()
-
-white = RandomPlayer(realtimeboard)
-black = RandomPlayer(realtimeboard)
 
 if __name__ == "__main__":
+
+    realtimeboard = chess.Board()
+
+    white = RandomPlayer(realtimeboard)
+    black = RandomPlayer(realtimeboard)
+
     while not realtimeboard.is_game_over():
         colour_to_move = realtimeboard.turn
         if colour_to_move == chess.WHITE:
