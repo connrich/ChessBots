@@ -20,24 +20,25 @@ realtimeboard = chess.Board()
 white = Player(realtimeboard)
 black = Player(realtimeboard)
 
-while not realtimeboard.is_game_over():
-    colour_to_move = realtimeboard.turn
-    print(colour_to_move)
-    if colour_to_move == chess.WHITE:
-        print('white to move')
-        move = white.getRandomMove(realtimeboard)
-    elif colour_to_move == chess.BLACK:
-        print('black to move')
-        move = black.getRandomMove(realtimeboard)
+if __name__ == "__main__":
+    while not realtimeboard.is_game_over():
+        colour_to_move = realtimeboard.turn
+        print(colour_to_move)
+        if colour_to_move == chess.WHITE:
+            print('white to move')
+            move = white.getRandomMove(realtimeboard)
+        elif colour_to_move == chess.BLACK:
+            print('black to move')
+            move = black.getRandomMove(realtimeboard)
 
-    if move in realtimeboard.legal_moves:
-        realtimeboard.push(move)
-        print(realtimeboard)
-    else:
-        print('error')
-    # time.sleep(5)
+        if move in realtimeboard.legal_moves:
+            realtimeboard.push(move)
+            print(realtimeboard)
+        else:
+            print('error')
+        # time.sleep(5)
 
-print(realtimeboard.result())
+    print(realtimeboard.result())
 
 # legal_moves = []
 # for legal_move in realtimeboard.legal_moves:
