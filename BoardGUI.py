@@ -12,6 +12,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setFixedSize(QtCore.QSize(500, 480))
         self.show()
 
+    def playGame(self):
+        self.Referee = Referee()
+
+        board = self.Referee.takeTurn()
+        while not board.is_game_over():
+            board = self.Referee.takeTurn()
+        print(board.result())
+        
+
 class Board(QtWidgets.QWidget):
     def __init__(self):
         super(Board, self).__init__()
@@ -34,12 +43,6 @@ class Board(QtWidgets.QWidget):
                 self.board_layout.addWidget(square, i, j)
             white_square = not white_square
         self.setLayout(self.board_layout)
-
-    def playGame(self):
-        self.Referee = Referee()
-        for i in range(4):
-            board = self.Referee.takeTurn()
-            print(board)
 
 
     def boardFromFEN(self, fen):
@@ -87,17 +90,18 @@ class Referee(object):
         self.black = RandomPlayer(self.realtimeboard, chess.BLACK)
 
     def takeTurn(self):
-        print(self.realtimeboard.turn)
         if self.realtimeboard.turn == chess.WHITE:
             move = self.white.getMove(self.realtimeboard)
+            print('white move: ', move)
         elif self.realtimeboard.turn == chess.BLACK:
             move = self.black.getMove(self.realtimeboard)
+            print('black move: ', move)
         else:
             print('error in takeTurn')
 
         if move in self.realtimeboard.legal_moves:
             self.realtimeboard.push(move)
-            print(move)
+            # print(move)
             print(self.realtimeboard)
             return self.realtimeboard
         else:
@@ -111,6 +115,6 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = MainWindow()
 
-    MainWindow.board.playGame()
+    MainWindow.playGame()
 
     sys.exit(app.exec_())
