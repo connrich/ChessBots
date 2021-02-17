@@ -1,7 +1,8 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 import sys
 import chess
-from ChessTest import RandomPlayer
+from ChessTest import RandomPlayer, BasicEvalPlayer
+from datetime import datetime
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -13,13 +14,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show()
 
     def playGame(self):
+        start = datetime.now()
         self.Referee = Referee()
 
         board = self.Referee.takeTurn()
         while not board.is_game_over():
             board = self.Referee.takeTurn()
         print(board.result())
-        
+
+        finish = datetime.now()
+        print('finished game in ',finish-start,' seconds')
 
 class Board(QtWidgets.QWidget):
     def __init__(self):
