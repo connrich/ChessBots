@@ -215,7 +215,7 @@ if __name__ == "__main__":
 
     blk_total_score = 0
     wht_total_score = 0
-    num_games = 1
+    num_games = 20
 
     start = datetime.now()
     for game in range(num_games):

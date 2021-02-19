@@ -8,40 +8,23 @@ import time
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+
         self.board = Board()
         self.board.boardFromFEN(chess.STARTING_BOARD_FEN)
         self.setCentralWidget(self.board)
         self.setFixedSize(QtCore.QSize(500, 480))
-        self.show()
 
         self.move_timer = QtCore.QTimer()
         self.move_timer.setInterval(500)
-        self.move_timer.timeout.connect(lambda: print('timeout'))
         self.move_timer.timeout.connect(self.takeTurn)
 
+        self.show()
+
     def playGame(self):
-        start = datetime.now()
-        print('init ref')
         self.Referee = Referee()
-
         self.move_timer.start()
-        print('timer started')
-
-        # board = self.Referee.takeTurn()
-        # while not board.is_game_over():
-        #     board = self.Referee.takeTurn()
-        #     self.board.close()
-        #     self.board = Board()
-        #     self.board.boardFromFEN(board.fen())
-        #     self.setCentralWidget(self.board)
-        #     time.sleep(1)
-        # print(board.result())
-
-        # finish = datetime.now()
-        # print('finished game in ',finish-start,' seconds')
 
     def takeTurn(self):
-        print('take turn')
         board = self.Referee.takeTurn()
         if board.is_game_over():
             self.move_timer.stop()
@@ -49,7 +32,6 @@ class MainWindow(QtWidgets.QMainWindow):
         new_board = Board()
         new_board.boardFromFEN(board.fen())
         self.setCentralWidget(new_board)
-        print('new board set')
         self.board.close()
         self.board = new_board
 
@@ -137,7 +119,7 @@ class Referee(object):
         if move in self.realtimeboard.legal_moves:
             self.realtimeboard.push(move)
             # print(move)
-            print(self.realtimeboard)
+            # print(self.realtimeboard)
             return self.realtimeboard
         else:
             print('Illegal Move:')
