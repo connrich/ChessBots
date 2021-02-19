@@ -57,18 +57,18 @@ class BasicEvalPlayer(object):
             self.legal_moves.append(legal_move)
             child_board = self.current_board.__copy__()
             child_board.push(legal_move)
-            evals = self.evaluateBoardState(child_board)
+            eval = self.evaluateBoardState(child_board)
             if self.colour == chess.WHITE:
                 if child_board.is_checkmate():
                     move = legal_move
                     break
-                elif evals[0] > evals[1]:
+                elif eval > 0:
                     move = legal_move
             elif self.colour == chess.BLACK:
                 if child_board.is_checkmate():
                     move = legal_move
                     break
-                elif evals[0] < evals[1]:
+                elif eval > 0:
                     move = legal_move
 
         if move == None:
@@ -86,65 +86,37 @@ class MiniMaxPlayer(object):
 
     def getMove(self, board):
         self.current_board = board
-        chosen_board, eval = self.miniMax(self.current_board, self.depth, True)
-        print('max eval found: ', eval)
-        # for _ in range(self.depth-1):
-        #     move = chosen_board.pop()
+        self.current_eval = self.evaluateBoardState(self.current_board)
+        if self.colour == chess.WHITE:
+            eval_diff = self.current_eval[0] - self.current_eval[1]
+            opponent_eval = self.current_eval[1]
+        elif self.colour == chess.BLACK:
+            eval_diff = self.current_eval[1] - self.current_eval[0]
+            opponent_eval = self.current_eval[0]
+
+        if  opponent_eval < 12:
+            depth = 4
+        else:
+            depth = 2
+        print('depth: ', depth)
+        chosen_board, eval = self.miniMax(self.current_board, True, depth=depth)
         return chosen_board.pop()
 
-    def miniMax(self, board, depth, maxPlayer):
+    def miniMax(self, board, maxPlayer, depth=2):
         if board.is_game_over():
-            result = board.result().split('-')
+            result  = board.result().split('-')
             print(result)
 
             if self.colour == chess.WHITE and result[0] == '1':
-                return board, float('inf')
+                return board, (float('inf'), 0.0)
             elif self.colour == chess.BLACK and result[1] == '1':
-                return board, float('inf')
+                return board, (0.0, float('inf'))
             else:
-                return board, -100.0
+                return board, (-100.0, -100.0)
         elif depth == 0:
-            eval = self.evaluateBoardState(board)
-            if maxPlayer:
-                if self.colour == chess.WHITE:
-                    eval = eval[0] - eval[1]
-                elif self.colour == chess.BLACK:
-                    eval = eval[1] - eval[0]
-                else:
-                    print('max player zero depth eval error')
-                    eval = 0
-                return board, eval
-            elif not maxPlayer:
-                if self.colour != chess.WHITE:
-                    eval = eval[0] - eval[1]
-                elif self.colour != chess.BLACK:
-                    eval = eval[1] - eval[0]
-                else:
-                    print('min player zero depth eval error')
+            evals = self.evaluateBoardState(board)
+            return board, evals
 
-                return board, eval
-
-        # if depth == 0 or board.is_game_over():
-        #     board.result()
-        #     eval = self.evaluateBoardState(board)
-        #     if maxPlayer:
-        #         if self.colour == chess.WHITE:
-        #             eval = eval[0] - eval[1]
-        #         elif self.colour == chess.BLACK:
-        #             eval = eval[1] - eval[0]
-        #         else:
-        #             print('max player zero depth eval error')
-        #             eval = 0
-        #         return board, eval
-        #     elif not maxPlayer:
-        #         if self.colour != chess.WHITE:
-        #             eval = eval[0] - eval[1]
-        #         elif self.colour != chess.BLACK:
-        #             eval = eval[1] - eval[0]
-        #         else:
-        #             print('min player zero depth eval error')
-        #
-        #         return board, eval
         if maxPlayer:
             maxEval = float('-inf')
             for legalmove in board.legal_moves:
@@ -155,13 +127,13 @@ class MiniMaxPlayer(object):
 
                 return_board, eval = self.miniMax(child_board, depth-1, not maxPlayer)
 
-                # if self.colour == chess.WHITE:
-                #     eval = eval[0] - eval[1]
-                # elif self.colour == chess.BLACK:
-                #     eval = eval[1] - eval[0]
-                # else:
-                #     print('max player eval error')
-                #     eval = 0
+                if self.colour == chess.WHITE:
+                    eval = eval[0] - eval[1]
+                elif self.colour == chess.BLACK:
+                    eval = eval[1] - eval[0]
+                else:
+                    print('max player eval error')
+                    eval = 0
 
                 if eval > maxEval:
                     maxEval = eval

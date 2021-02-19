@@ -15,25 +15,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setFixedSize(QtCore.QSize(500, 480))
 
         self.move_timer = QtCore.QTimer()
-        self.move_timer.setInterval(500)
+        self.move_timer.setInterval(200)
         self.move_timer.timeout.connect(self.takeTurn)
 
         self.show()
 
     def playGame(self):
+        self.board.boardFromFEN(chess.STARTING_BOARD_FEN)
         self.Referee = Referee()
         self.move_timer.start()
 
     def takeTurn(self):
         board = self.Referee.takeTurn()
-        if board.is_game_over():
-            self.move_timer.stop()
-            print(board.result())
         new_board = Board()
         new_board.boardFromFEN(board.fen())
         self.setCentralWidget(new_board)
         self.board.close()
         self.board = new_board
+        if board.is_game_over():
+            self.move_timer.stop()
+            print(board.result())
 
 
 
@@ -89,14 +90,14 @@ class Board(QtWidgets.QWidget):
         self.pixmapDict['b'] = QtGui.QPixmap('Piece Images/blk_bishop.png')
         self.pixmapDict['B'] = QtGui.QPixmap('Piece Images/wht_bishop.png')
         self.pixmapDict['k'] = QtGui.QPixmap('Piece Images/blk_king.png')
-        self.pixmapDict['K']  = QtGui.QPixmap('Piece Images/wht_king.png')
-        self.pixmapDict['n']  = QtGui.QPixmap('Piece Images/blk_knight.png')
-        self.pixmapDict['N']  = QtGui.QPixmap('Piece Images/wht_knight.png')
-        self.pixmapDict['p']  = QtGui.QPixmap('Piece Images/blk_pawn.png')
+        self.pixmapDict['K'] = QtGui.QPixmap('Piece Images/wht_king.png')
+        self.pixmapDict['n'] = QtGui.QPixmap('Piece Images/blk_knight.png')
+        self.pixmapDict['N'] = QtGui.QPixmap('Piece Images/wht_knight.png')
+        self.pixmapDict['p'] = QtGui.QPixmap('Piece Images/blk_pawn.png')
         self.pixmapDict['P'] = QtGui.QPixmap('Piece Images/wht_pawn.png')
-        self.pixmapDict['q']  = QtGui.QPixmap('Piece Images/blk_queen.png')
-        self.pixmapDict['Q']  = QtGui.QPixmap('Piece Images/wht_queen.png')
-        self.pixmapDict['r']  = QtGui.QPixmap('Piece Images/blk_rook.png')
+        self.pixmapDict['q'] = QtGui.QPixmap('Piece Images/blk_queen.png')
+        self.pixmapDict['Q'] = QtGui.QPixmap('Piece Images/wht_queen.png')
+        self.pixmapDict['r'] = QtGui.QPixmap('Piece Images/blk_rook.png')
         self.pixmapDict['R'] = QtGui.QPixmap('Piece Images/wht_rook.png')
 
 class Referee(object):
@@ -132,6 +133,9 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = MainWindow()
 
-    MainWindow.playGame()
+    games = 10
+    for game in range(games):
+        print('play game ', game)
+        MainWindow.playGame()
 
     sys.exit(app.exec_())

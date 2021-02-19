@@ -43,9 +43,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def takeTurn(self):
         print('take turn')
         board = self.Referee.takeTurn()
+        print('test')
         if board.is_game_over():
             self.move_timer.stop()
             print(board.result())
+
+
+
         new_board = Board()
         new_board.boardFromFEN(board.fen())
         self.setCentralWidget(new_board)
@@ -78,9 +82,9 @@ class Board(QtWidgets.QWidget):
             white_square = not white_square
         self.setLayout(self.board_layout)
 
-
     def boardFromFEN(self, fen):
         # TODO construct visual board from fen
+        print('board from fen')
         ranks = fen.split('/')
         ranks[-1] = ranks[-1].split(' ')[0]
         for rank_index, rank in enumerate(ranks):
@@ -137,7 +141,7 @@ class Referee(object):
         if move in self.realtimeboard.legal_moves:
             self.realtimeboard.push(move)
             # print(move)
-            print(self.realtimeboard)
+            # print(self.realtimeboard)
             return self.realtimeboard
         else:
             print('Illegal Move:')
