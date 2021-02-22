@@ -1,7 +1,8 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 import sys
 import chess
-from ChessTest import RandomPlayer, BasicEvalPlayer, MiniMaxPlayer
+from ChessTest import MiniMaxPlayer
+from BasicEvalPlayer import BasicEvalPlayer
 from datetime import datetime
 import time
 
@@ -16,16 +17,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.move_timer = QtCore.QTimer()
         self.move_timer.setInterval(500)
-        self.move_timer.timeout.connect(lambda: print('timeout'))
         self.move_timer.timeout.connect(self.takeTurn)
 
     def playGame(self):
         start = datetime.now()
-        print('init ref')
         self.Referee = Referee()
 
         self.move_timer.start()
-        print('timer started')
 
         # board = self.Referee.takeTurn()
         # while not board.is_game_over():
@@ -41,9 +39,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # print('finished game in ',finish-start,' seconds')
 
     def takeTurn(self):
-        print('take turn')
         board = self.Referee.takeTurn()
-        print('test')
         if board.is_game_over():
             self.move_timer.stop()
             print(board.result())
@@ -53,7 +49,6 @@ class MainWindow(QtWidgets.QMainWindow):
         new_board = Board()
         new_board.boardFromFEN(board.fen())
         self.setCentralWidget(new_board)
-        print('new board set')
         self.board.close()
         self.board = new_board
 
@@ -83,8 +78,6 @@ class Board(QtWidgets.QWidget):
         self.setLayout(self.board_layout)
 
     def boardFromFEN(self, fen):
-        # TODO construct visual board from fen
-        print('board from fen')
         ranks = fen.split('/')
         ranks[-1] = ranks[-1].split(' ')[0]
         for rank_index, rank in enumerate(ranks):
@@ -131,10 +124,10 @@ class Referee(object):
     def takeTurn(self):
         if self.realtimeboard.turn == chess.WHITE:
             move = self.white.getMove(self.realtimeboard)
-            print('white move: ', move)
+            # print('white move: ', move)
         elif self.realtimeboard.turn == chess.BLACK:
             move = self.black.getMove(self.realtimeboard)
-            print('black move: ', move)
+            # print('black move: ', move)
         else:
             print('error in takeTurn')
 

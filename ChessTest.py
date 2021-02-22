@@ -1,79 +1,6 @@
 import chess
-from random import randint
 from datetime import datetime
-
-class RandomPlayer(object):
-    def __init__(self, board, colour):
-        self.current_board = board
-        self.legal_moves = []
-
-    # Pass in the current board state
-    def getMove(self, board):
-        self.current_board = board
-        self.legal_moves.clear()
-        for legal_move in self.current_board.legal_moves:
-            self.legal_moves.append(legal_move)
-
-        random = randint(0, len(self.legal_moves)-1)
-        random_move = self.legal_moves[random]
-
-        return random_move
-
-class BasicEvalPlayer(object):
-    def __init__(self, board, colour):
-        self.colour = colour
-        self.current_board = board
-        self.legal_moves = []
-
-        self.pieceValues = {'p': 1, 'b': 3, 'n': 3, 'r': 5, 'q': 9, 'k': 3.5}
-
-    def evaluateBoardState(self, board):
-        ranks = board.fen().split('/')
-        ranks[-1] = ranks[-1].split(' ')[0]  # Strips extraneous information
-        wht_eval = 0
-        blk_eval = 0
-        for rank in ranks:
-            for char in rank:
-                if char.isdigit():
-                    pass
-                elif char.isupper():
-                    wht_eval += self.pieceValues[char.lower()]
-                elif char.islower():
-                    blk_eval += self.pieceValues[char]
-                else:
-                    pass
-        return (wht_eval, blk_eval)
-
-    def evalLegalMoves(self, board):
-        self.legal_moves.clear()
-        for legal_move in board.legal_moves:
-            self.legal_moves.append(legal_move)
-
-    def getMove(self, board):
-        self.current_board = board
-        self.legal_moves.clear()
-        move = None
-        for legal_move in self.current_board.legal_moves:
-            self.legal_moves.append(legal_move)
-            child_board = self.current_board.__copy__()
-            child_board.push(legal_move)
-            eval = self.evaluateBoardState(child_board)
-            if self.colour == chess.WHITE:
-                if child_board.is_checkmate():
-                    move = legal_move
-                    break
-                elif eval > 0:
-                    move = legal_move
-            elif self.colour == chess.BLACK:
-                if child_board.is_checkmate():
-                    move = legal_move
-                    break
-                elif eval > 0:
-                    move = legal_move
-
-        if move == None:
-            move = self.legal_moves[0]
-        return move
+from BasicEvalPlayer import BasicEvalPlayer as BasicEvalPlayer
 
 class MiniMaxPlayer(object):
     def __init__(self, board, colour, depth=2):
@@ -97,40 +24,50 @@ class MiniMaxPlayer(object):
         if  opponent_eval < 12:
             depth = 4
         else:
-            depth = 2
-        print('depth: ', depth)
+            depth = 3
         chosen_board, eval = self.miniMax(self.current_board, True, depth=depth)
+        print(depth)
         return chosen_board.pop()
 
     def miniMax(self, board, maxPlayer, depth=2):
         if board.is_game_over():
-            result  = board.result().split('-')
-            print(result)
+            result = board.result().split('-')
 
             if self.colour == chess.WHITE and result[0] == '1':
-                return board, (float('inf'), 0.0)
+                return board, 999999
             elif self.colour == chess.BLACK and result[1] == '1':
-                return board, (0.0, float('inf'))
+                return board, 999999
+            if self.colour == chess.WHITE and result[1] == '1':
+                return board, -999999
+            elif self.colour == chess.BLACK and result[0] == '1':
+                return board, -999999
             else:
-                return board, (-100.0, -100.0)
+                return board, -100.0
         elif depth == 0:
             evals = self.evaluateBoardState(board)
-            return board, evals
+            if self.colour == chess.WHITE:
+                eval = evals[0] - evals[1]
+            elif self.colour == chess.BLACK:
+                eval = evals[1] - evals[0]
+            return board, eval
 
         if maxPlayer:
             maxEval = float('-inf')
             for legalmove in board.legal_moves:
                 child_board = board.__copy__()
                 child_board.push(legalmove)
+
                 # eval = self.evaluateBoardState(child_board)
                 # print(eval)
 
-                return_board, eval = self.miniMax(child_board, depth-1, not maxPlayer)
+                return_board, eval = self.miniMax(child_board, not maxPlayer, depth=depth-1)
 
                 if self.colour == chess.WHITE:
-                    eval = eval[0] - eval[1]
+                    if child_board.is_check():
+                        eval += 0.55
                 elif self.colour == chess.BLACK:
-                    eval = eval[1] - eval[0]
+                    if child_board.is_check():
+                        eval += 0.55
                 else:
                     print('max player eval error')
                     eval = 0
@@ -138,8 +75,8 @@ class MiniMaxPlayer(object):
                 if eval > maxEval:
                     maxEval = eval
                     best_board = child_board
-                    print(best_board, maxEval)
             return best_board, maxEval
+
         elif not maxPlayer:
             minEval = float('inf')
             for legalmove in board.legal_moves:
@@ -149,13 +86,13 @@ class MiniMaxPlayer(object):
                 child_board.push(legalmove)
                 # eval = self.evaluateBoardState(child_board)
 
-                return_board, eval = self.miniMax(child_board, depth-1, not maxPlayer)
-                # if self.colour != chess.WHITE:
-                #     eval = eval[0] - eval[1]
-                # elif self.colour != chess.BLACK:
-                #     eval = eval[1] - eval[0]
-                # else:
-                #     print('min player eval error')
+                return_board, eval = self.miniMax(child_board, not maxPlayer, depth=depth-1)
+                if self.colour != chess.WHITE:
+                    pass
+                elif self.colour != chess.BLACK:
+                    pass
+                else:
+                    print('min player eval error')
                 if eval < minEval:
                     minEval = eval
                     best_board = return_board
@@ -182,12 +119,12 @@ if __name__ == "__main__":
 
     realtimeboard = chess.Board()
 
-    white = BasicEvalPlayer(realtimeboard, chess.WHITE)
-    black = MiniMaxPlayer(realtimeboard, chess.BLACK)
+    white = MiniMaxPlayer(realtimeboard, chess.WHITE)
+    black = BasicEvalPlayer(realtimeboard, chess.BLACK)
 
     blk_total_score = 0
     wht_total_score = 0
-    num_games = 20
+    num_games = 1
 
     start = datetime.now()
     for game in range(num_games):
