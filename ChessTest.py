@@ -1,6 +1,8 @@
 import chess
+import chess.polyglot
 from datetime import datetime
 from BasicEvalPlayer import BasicEvalPlayer as BasicEvalPlayer
+from Bots import RandomPlayer
 
 class MiniMaxPlayer(object):
     def __init__(self, board, colour, depth=2):
@@ -119,8 +121,13 @@ if __name__ == "__main__":
 
     realtimeboard = chess.Board()
 
-    white = MiniMaxPlayer(realtimeboard, chess.WHITE)
-    black = BasicEvalPlayer(realtimeboard, chess.BLACK)
+    with chess.polyglot.open_reader("Perfect_2021/BIN/Perfect2021.bin") as reader:
+        for entry in reader.find_all(realtimeboard):
+            print(entry.move, entry.weight, entry.learn)
+
+
+    white = MiniMaxPlayer(realtimeboard, chess.WHITE, depth=1)
+    black = RandomPlayer(realtimeboard, chess.BLACK)
 
     blk_total_score = 0
     wht_total_score = 0
@@ -130,7 +137,6 @@ if __name__ == "__main__":
     for game in range(num_games):
         realtimeboard.reset()
         while not realtimeboard.is_game_over():
-            print(len(realtimeboard.move_stack))
             colour_to_move = realtimeboard.turn
             if colour_to_move == chess.WHITE:
                 move = white.getMove(realtimeboard)
