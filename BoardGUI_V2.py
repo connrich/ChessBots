@@ -1,8 +1,10 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 import sys
 import chess
-from ChessTest import MiniMaxPlayer
-from BasicEvalPlayer import BasicEvalPlayer
+from Bots import BasicEvalPlayer, MiniMaxPlayer
 from datetime import datetime
 import time
 
@@ -13,38 +15,74 @@ class MainWindow(QtWidgets.QMainWindow):
         self.board = Board()
         self.board.boardFromFEN(chess.STARTING_BOARD_FEN)
         self.setCentralWidget(self.board)
-        self.setFixedSize(QtCore.QSize(500, 480))
+        # self.setFixedSize(QtCore.QSize(500, 480))
+
+        self.turnThread = turnThread(self.playGame)
 
         self.move_timer = QtCore.QTimer()
         self.move_timer.setInterval(200)
         self.move_timer.timeout.connect(self.takeTurn)
 
+        self.DockWidget = QtWidgets.QDockWidget()
+        self.dock_widget = QtWidgets.QWidget()
+
+        self.play_button = QtWidgets.QPushButton()
+        self.play_button.setIcon(QtGui.QIcon('Assets/play_icon.png'))
+        self.dock_layout = QtWidgets.QVBoxLayout()
+        self.dock_layout.addWidget(self.play_button)
+        self.dock_widget.setLayout(self.dock_layout)
+        self.DockWidget.setWidget(self.dock_widget)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.DockWidget)
+        self.play_button.clicked.connect(self.play_pause)
+
+        self.direction_layout = QtWidgets.QHBoxLayout()
+        self.back = QPushButton()
+        self.back.setIcon(QIcon('Assets/back_arrow'))
+        self.direction_layout.addWidget(self.back)
+        self.forward = QPushButton()
+        self.forward.setIcon(QIcon('Assets/forward_arrow'))
+        self.direction_layout.addWidget(self.forward)
+
+        self.direction_widget = QWidget()
+        self.direction_widget.setLayout(self.direction_layout)
+        self.dock_layout.addWidget(self.direction_widget)
+
         self.show()
+        self.playGame()
+
+    def play_pause(self):
+        if self.move_timer.isActive():
+            self.move_timer.stop()
+            self.play_button.setIcon(QtGui.QIcon('Assets/play_icon.png'))
+        else:
+            self.move_timer.start()
+            self.play_button.setIcon(QtGui.QIcon('Assets/pause_icon.png'))
+        pass
 
     def playGame(self):
         self.board.boardFromFEN(chess.STARTING_BOARD_FEN)
         self.Referee = Referee()
-        self.move_timer.start()
+        # self.move_timer.start()
 
     def takeTurn(self):
         board = self.Referee.takeTurn()
-        new_board = Board()
-        new_board.boardFromFEN(board.fen())
-        self.setCentralWidget(new_board)
-        self.board.close()
-        self.board = new_board
+        self.board.boardFromFEN(board.fen())
         if board.is_game_over():
-            self.move_timer.stop()
             print(board.result())
+            self.move_timer.stop()
 
 
 
 class Board(QtWidgets.QWidget):
     def __init__(self):
         super(Board, self).__init__()
+        self.setFixedSize(QtCore.QSize(480, 480))
+
         self.board_layout = QtWidgets.QGridLayout()
         self.board_layout.setHorizontalSpacing(0)
         self.board_layout.setVerticalSpacing(0)
+
+        self.pieces = []
 
         self.loadPiecePixmaps()
 
@@ -64,7 +102,10 @@ class Board(QtWidgets.QWidget):
 
 
     def boardFromFEN(self, fen):
-        # TODO construct visual board from fen
+        for piece in self.pieces:
+            self.board_layout.removeWidget(piece)
+            piece.close()
+        self.pieces.clear()
         ranks = fen.split('/')
         ranks[-1] = ranks[-1].split(' ')[0]
         for rank_index, rank in enumerate(ranks):
@@ -72,6 +113,7 @@ class Board(QtWidgets.QWidget):
             for char in rank:
                 if char.isalpha():
                     piece = QtWidgets.QLabel()
+                    self.pieces.append(piece)
                     piece.setPixmap(self.getPiecePixmap(char))
                     self.board_layout.addWidget(piece, rank_index, file_index)
                     file_index += 1
@@ -130,11 +172,20 @@ class Referee(object):
             print(self.realtimeboard.legal_moves)
             return
 
+class turnThread(QtCore.QThread):
+
+    def __init__(self, turn_method):
+        QtCore.QThread.__init__(self)
+        self.turn_method = turn_method
+
+    def run(self):
+        self.turn_method()
+
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = MainWindow()
 
-    games = 10
+    games = 1
     for game in range(games):
         print('play game ', game)
         MainWindow.playGame()

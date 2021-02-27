@@ -131,10 +131,12 @@ if __name__ == "__main__":
 
     blk_total_score = 0
     wht_total_score = 0
-    num_games = 1
+    num_games = 5
 
     start = datetime.now()
+    game_times = []
     for game in range(num_games):
+        game_start = datetime.now()
         realtimeboard.reset()
         while not realtimeboard.is_game_over():
             colour_to_move = realtimeboard.turn
@@ -164,7 +166,10 @@ if __name__ == "__main__":
         wht_total_score += float(result[0])
         blk_total_score += float(result[1])
 
+        game_times.append(str(datetime.now() - game_start))
+
 
     finish = datetime.now()
     print('White: ', wht_total_score, ' Black: ', blk_total_score)
-    print(num_games, ' game(s) completed in ', finish-start,)
+    print(num_games, ' game(s) completed in ', finish-start)
+    print(game_times)

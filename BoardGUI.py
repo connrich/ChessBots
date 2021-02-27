@@ -1,8 +1,7 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 import sys
 import chess
-from ChessTest import MiniMaxPlayer
-from BasicEvalPlayer import BasicEvalPlayer
+from Bots import RandomPlayer, BasicEvalPlayer, MiniMaxPlayer
 from datetime import datetime
 import time
 
@@ -118,7 +117,7 @@ class Referee(object):
     # TODO create 2 player instances and check legal rules
     def __init__(self):
         self.realtimeboard = chess.Board()
-        self.white = RandomPlayer(self.realtimeboard, chess.WHITE)
+        self.white = MiniMaxPlayer(self.realtimeboard, chess.WHITE)
         self.black = MiniMaxPlayer(self.realtimeboard, chess.BLACK)
 
     def takeTurn(self):
