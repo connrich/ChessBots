@@ -4,7 +4,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import sys
 import chess
-from Bots import BasicEvalPlayer, MiniMaxPlayer
+from Bots import RandomPlayer, BasicEvalPlayer, MiniMaxPlayer
+from ChessTest import AlphaBetaPlayer
 from datetime import datetime
 import time
 
@@ -24,6 +25,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.move_timer.timeout.connect(self.takeTurn)
 
         self.DockWidget = QtWidgets.QDockWidget()
+        self.DockWidget.setWindowTitle('Game Controls')
+        self.DockWidget.setFeatures(QDockWidget.NoDockWidgetFeatures)
         self.dock_widget = QtWidgets.QWidget()
 
         self.play_button = QtWidgets.QPushButton()
@@ -57,7 +60,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.move_timer.start()
             self.play_button.setIcon(QtGui.QIcon('Assets/pause_icon.png'))
-        pass
 
     def playGame(self):
         self.board.boardFromFEN(chess.STARTING_BOARD_FEN)
@@ -147,8 +149,8 @@ class Referee(object):
     # TODO create 2 player instances and check legal rules
     def __init__(self):
         self.realtimeboard = chess.Board()
-        self.white = BasicEvalPlayer(self.realtimeboard, chess.WHITE)
-        self.black = MiniMaxPlayer(self.realtimeboard, chess.BLACK)
+        self.white = RandomPlayer(self.realtimeboard, chess.WHITE)
+        self.black = AlphaBetaPlayer(self.realtimeboard, chess.BLACK)
 
     def takeTurn(self):
         if self.realtimeboard.turn == chess.WHITE:

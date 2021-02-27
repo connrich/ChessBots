@@ -2,9 +2,9 @@ import chess
 import chess.polyglot
 from datetime import datetime
 from BasicEvalPlayer import BasicEvalPlayer as BasicEvalPlayer
-from Bots import RandomPlayer
+from Bots import RandomPlayer, BasicEvalPlayer, MiniMaxPlayer
 
-class MiniMaxPlayer(object):
+class AlphaBetaPlayer(object):
     def __init__(self, board, colour, depth=2):
         self.current_board = board
         self.colour = colour
@@ -28,7 +28,7 @@ class MiniMaxPlayer(object):
         else:
             depth = 3
         chosen_board, eval = self.miniMax(self.current_board, True, depth=depth)
-        print(depth)
+        print(depth, ' eval: ', eval)
         return chosen_board.pop()
 
     def miniMax(self, board, maxPlayer, depth=2):
@@ -101,20 +101,18 @@ class MiniMaxPlayer(object):
             return best_board, minEval
 
     def evaluateBoardState(self, board):
-        ranks = board.fen().split('/')
-        ranks[-1] = ranks[-1].split(' ')[0]  # Strips extraneous information
+        piece_map = board.piece_map()
         wht_eval = 0
         blk_eval = 0
-        for rank in ranks:
-            for char in rank:
-                if char.isdigit():
-                    pass
-                elif char.isupper():
-                    wht_eval += self.pieceValues[char.lower()]
-                elif char.islower():
-                    blk_eval += self.pieceValues[char]
-                else:
-                    pass
+        for square, piece in piece_map.items():
+            # print('square: ', square)
+            # print('piece: ', piece)
+            # print(type(piece.symbol()))
+            piece = piece.symbol()
+            if piece.isupper():
+                wht_eval += self.pieceValues[piece.lower()]
+            elif piece.islower():
+                blk_eval += self.pieceValues[piece]
         return (wht_eval, blk_eval)
 
 if __name__ == "__main__":
@@ -126,7 +124,7 @@ if __name__ == "__main__":
             print(entry.move, entry.weight, entry.learn)
 
 
-    white = MiniMaxPlayer(realtimeboard, chess.WHITE, depth=1)
+    white = AlphaBetaPlayer(realtimeboard, chess.WHITE, depth=1)
     black = RandomPlayer(realtimeboard, chess.BLACK)
 
     blk_total_score = 0
@@ -138,6 +136,15 @@ if __name__ == "__main__":
     for game in range(num_games):
         game_start = datetime.now()
         realtimeboard.reset()
+
+        # piece_map = realtimeboard.piece_map()
+        # print(piece_map)
+        # for key in piece_map:
+        #     print(key)
+        #     print('type: ', type(key))
+        #     print(piece_map[key])
+
+
         while not realtimeboard.is_game_over():
             colour_to_move = realtimeboard.turn
             if colour_to_move == chess.WHITE:
