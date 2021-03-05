@@ -1,22 +1,26 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 import math
 import chess
+from Bots import MiniMaxPlayer, RandomPlayer
 
 class Board(QtWidgets.QWidget):
     def __init__(self):
         super(Board, self).__init__()
         self.setFixedSize(QtCore.QSize(480, 480))
 
-        self.board_layout = QtWidgets.QGridLayout()
-        self.board_layout.setHorizontalSpacing(0)
-        self.board_layout.setVerticalSpacing(0)
-
+        self.loadPiecePixmaps()
         self.pieces = []
         self.selected_piece = None
         self.moves = []
+        self.prevMoves = []
+        self.initBoard()
 
-        self.loadPiecePixmaps()
+        self.Referee = Referee()
 
+    def initBoard(self):
+        self.board_layout = QtWidgets.QGridLayout()
+        self.board_layout.setHorizontalSpacing(0)
+        self.board_layout.setVerticalSpacing(0)
         white_square = True
         for i in range(8):
             for j in range(8):
@@ -31,6 +35,8 @@ class Board(QtWidgets.QWidget):
                 self.board_layout.addWidget(square, i, j)
             white_square = not white_square
         self.setLayout(self.board_layout)
+
+        self.boardFromFEN(chess.STARTING_BOARD_FEN)
 
 
     def boardFromFEN(self, fen):
@@ -57,7 +63,7 @@ class Board(QtWidgets.QWidget):
 
     def getPiecePixmap(self, piece):
         try:
-            pixmap = self.pixmapDict[piece]  # = self.blk_bishop
+            pixmap = self.pixmapDict[piece]
         except:
             pixmap = QtGui.QPixmap()
             pixmap.fill(QtGui.QColor(QtCore.Qt.transparent))
@@ -81,6 +87,20 @@ class Board(QtWidgets.QWidget):
     def show_moves(self):
         self.selected_piece = self
         print('show_moves')
+
+    def takeTurn(self):
+        if self.prevMoves:
+            self.oldBoard.push(self.prevMoves.pop())
+            board = self.oldBoard
+        else:
+            board = self.Referee.takeTurn()
+        self.boardFromFEN(board.fen())
+
+    def previousMove(self):
+        self.oldBoard = self.Referee.realtimeboard
+        if self.oldBoard.ply() != 0:
+            self.prevMoves.append(self.oldBoard.pop())
+            self.boardFromFEN(self.oldBoard.fen())
 
     class Piece(QtWidgets.QLabel):
         piece_selected = QtCore.pyqtSignal()
@@ -115,3 +135,29 @@ class Board(QtWidgets.QWidget):
             parent = self.parent()
             parent.selected_piece.clearSelection()
             print(math.floor(self.square/8), self.square%8)
+
+class Referee(object):
+    def __init__(self):
+        self.realtimeboard = chess.Board()
+        self.white = MiniMaxPlayer(self.realtimeboard, chess.WHITE, depth=3)
+        self.black = RandomPlayer(self.realtimeboard, chess.BLACK)
+
+    def takeTurn(self):
+        if self.realtimeboard.turn == chess.WHITE:
+            move = self.white.getMove(self.realtimeboard)
+            print('white move: ', move)
+        elif self.realtimeboard.turn == chess.BLACK:
+            move = self.black.getMove(self.realtimeboard)
+            print('black move: ', move)
+        else:
+            print('error in Referee.takeTurn')
+
+        if move in self.realtimeboard.legal_moves:
+            self.realtimeboard.push(move)
+            return self.realtimeboard
+        else:
+            print('Illegal Move:')
+            print(self.realtimeboard)
+            print(move)
+            print(self.realtimeboard.legal_moves)
+            return

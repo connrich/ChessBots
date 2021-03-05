@@ -14,16 +14,19 @@ import time
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-
-        self.board = Board()
-        self.setCentralWidget(self.board)
         # self.setFixedSize(QtCore.QSize(500, 480))
+
+        self.initBoard()
         self.initControlDock()
         self.show()
 
         self.move_timer = QtCore.QTimer()
         self.move_timer.setInterval(200)
         self.move_timer.timeout.connect(self.takeTurn)
+
+    def initBoard(self):
+        self.board = Board()
+        self.setCentralWidget(self.board)
 
     def initControlDock(self):
         self.DockWidget = QtWidgets.QDockWidget()
@@ -44,10 +47,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.back = QPushButton()
         self.back.setIcon(QIcon('Assets/back_arrow'))
         self.direction_layout.addWidget(self.back)
+        self.back.clicked.connect(self.board.previousMove)
         self.forward = QPushButton()
         self.forward.setIcon(QIcon('Assets/forward_arrow'))
         self.direction_layout.addWidget(self.forward)
-        self.forward.clicked.connect(self.flipBoard)
+        self.forward.clicked.connect(self.board.takeTurn)
 
         self.direction_widget = QWidget()
         self.direction_widget.setLayout(self.direction_layout)
@@ -65,9 +69,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.play_button.setIcon(QtGui.QIcon('Assets/pause_icon.png'))
 
     def playGame(self):
-        self.board.boardFromFEN(chess.STARTING_BOARD_FEN)
         self.Referee = Referee()
-        # self.move_timer.start()
 
     def takeTurn(self):
         board = self.Referee.takeTurn()
@@ -84,7 +86,6 @@ class Referee(object):
         self.black = RandomPlayer(self.realtimeboard, chess.BLACK)
 
     def takeTurn(self):
-        print([x for x in self.realtimeboard.legal_moves])
         if self.realtimeboard.turn == chess.WHITE:
             move = self.white.getMove(self.realtimeboard)
             print('white move: ', move)
