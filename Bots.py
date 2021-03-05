@@ -1,5 +1,7 @@
 import chess
+import chess.polyglot
 from random import randint
+from datetime import datetime
 
 class RandomPlayer(object):
     def __init__(self, board, colour):
@@ -180,3 +182,69 @@ class MiniMaxPlayer(object):
                 else:
                     pass
         return (wht_eval, blk_eval)
+
+if __name__ == "__main__":
+
+    realtimeboard = chess.Board()
+
+    with chess.polyglot.open_reader("Perfect_2021/BIN/Perfect2021.bin") as reader:
+        for entry in reader.find_all(realtimeboard):
+            print(entry.move, entry.weight, entry.learn)
+
+
+    white = MiniMaxPlayer(realtimeboard, chess.WHITE, depth=3)
+    black = RandomPlayer(realtimeboard, chess.BLACK)
+
+    blk_total_score = 0
+    wht_total_score = 0
+    num_games = 5
+
+    start = datetime.now()
+    game_times = []
+    for game in range(num_games):
+        game_start = datetime.now()
+        realtimeboard.reset()
+
+        # piece_map = realtimeboard.piece_map()
+        # print(piece_map)
+        # for key in piece_map:
+        #     print(key)
+        #     print('type: ', type(key))
+        #     print(piece_map[key])
+
+
+        while not realtimeboard.is_game_over():
+            colour_to_move = realtimeboard.turn
+            if colour_to_move == chess.WHITE:
+                move = white.getMove(realtimeboard)
+            elif colour_to_move == chess.BLACK:
+                move = black.getMove(realtimeboard)
+
+            legal_moves = realtimeboard.legal_moves
+            if move in legal_moves:
+                realtimeboard.push(move)
+                print()
+                print(realtimeboard)
+            else:
+                print('Illegal Move:')
+                print(realtimeboard)
+                print(move)
+                print(legal_moves)
+                break
+            # time.sleep(5)
+
+        result = realtimeboard.result().split('-')
+        if result[0] == '1/2' or result[1] == '1/2':
+            result[0] = 0.5
+            result[1] = 0.5
+
+        wht_total_score += float(result[0])
+        blk_total_score += float(result[1])
+
+        game_times.append(str(datetime.now() - game_start))
+
+
+    finish = datetime.now()
+    print('White: ', wht_total_score, ' Black: ', blk_total_score)
+    print(num_games, ' game(s) completed in ', finish-start)
+    print(game_times)

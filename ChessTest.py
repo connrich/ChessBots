@@ -27,11 +27,11 @@ class AlphaBetaPlayer(object):
             depth = 4
         else:
             depth = 3
-        chosen_board, eval = self.miniMax(self.current_board, True, depth=depth)
+        chosen_board, eval = self.miniMax(self.current_board, float('-inf'), float('inf'), True, depth=depth)
         print(depth, ' eval: ', eval)
         return chosen_board.pop()
 
-    def miniMax(self, board, maxPlayer, depth=2):
+    def miniMax(self, board, maxPlayer, alpha, beta, depth=2):
         if board.is_game_over():
             result = board.result().split('-')
 
@@ -59,10 +59,7 @@ class AlphaBetaPlayer(object):
                 child_board = board.__copy__()
                 child_board.push(legalmove)
 
-                # eval = self.evaluateBoardState(child_board)
-                # print(eval)
-
-                return_board, eval = self.miniMax(child_board, not maxPlayer, depth=depth-1)
+                return_board, eval = self.miniMax(child_board, False, alpha, beta, depth=depth-1)
 
                 if self.colour == chess.WHITE:
                     if child_board.is_check():
@@ -77,18 +74,19 @@ class AlphaBetaPlayer(object):
                 if eval > maxEval:
                     maxEval = eval
                     best_board = child_board
+                alpha = max(alpha, eval)
+                if beta <= alpha:
+                    print('pruned')
+                    break
             return best_board, maxEval
 
         elif not maxPlayer:
             minEval = float('inf')
             for legalmove in board.legal_moves:
-                # print(legalmove)
-                # print(legalmove in board.legal_moves)
                 child_board = board.__copy__()
                 child_board.push(legalmove)
-                # eval = self.evaluateBoardState(child_board)
 
-                return_board, eval = self.miniMax(child_board, not maxPlayer, depth=depth-1)
+                return_board, eval = self.miniMax(child_board, True, alpha, beta, depth=depth-1)
                 if self.colour != chess.WHITE:
                     pass
                 elif self.colour != chess.BLACK:
@@ -98,6 +96,10 @@ class AlphaBetaPlayer(object):
                 if eval < minEval:
                     minEval = eval
                     best_board = return_board
+                beta = min(beta, eval)
+                if beta <= alpha:
+                    print('pruned')
+                    break
             return best_board, minEval
 
     def evaluateBoardState(self, board):
