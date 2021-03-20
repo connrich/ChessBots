@@ -1,8 +1,113 @@
 import chess
 import chess.polyglot
 from datetime import datetime
-from BasicEvalPlayer import BasicEvalPlayer as BasicEvalPlayer
-from Bots import RandomPlayer, BasicEvalPlayer, MiniMaxPlayer
+from Bots import RandomPlayer, MiniMaxPlayer
+from operator import itemgetter
+
+class OrderedMiniMax(MiniMaxPlayer):
+    def __init__(self, board, colour, depth=2):
+        super(OrderedMiniMax, self).__init__(board, colour, depth)
+        self.available_moves = []
+
+    def getMove(self, board):
+        self.current_board = board
+        self.current_eval = self.evaluateBoardState(self.current_board)
+        if self.colour == chess.WHITE:
+            eval_diff = self.current_eval[0] - self.current_eval[1]
+            opponent_eval = self.current_eval[1]
+        elif self.colour == chess.BLACK:
+            eval_diff = self.current_eval[1] - self.current_eval[0]
+            opponent_eval = self.current_eval[0]
+
+        if opponent_eval < 12:
+            depth = 4
+        else:
+            depth = 3
+        chosen_board, eval = self.miniMax(self.current_board, True, depth=depth)
+        return chosen_board.pop()
+
+    def getOrderedMoves(self, board, color):
+        self.available_moves.clear()
+        if color == chess.WHITE:
+            for move in board.legal_moves:
+                child_board = board.__copy__()
+                child_board.push(move)
+                evals = self.evaluateBoardState(child_board)
+                eval = evals[0]-evals[1]
+                self.available_moves.append((eval, move))
+                sort = sorted(self.available_moves, key=itemgetter(0), reverse=True )
+            return sort
+        else:
+            for move in board.legal_moves:
+                evals = self.evaluateBoardState(board.push(move))
+                eval = evals[1]-evals[0]
+                self.available_moves.append((eval, move))
+            return self.available_moves.sort()
+
+
+
+    def miniMax(self, board, maxPlayer, depth=2):
+        if board.is_game_over():
+            result = board.result().split('-')
+
+            if self.colour == chess.WHITE and result[0] == '1':
+                return board, 999999
+            elif self.colour == chess.BLACK and result[1] == '1':
+                return board, 999999
+            if self.colour == chess.WHITE and result[1] == '1':
+                return board, -999999
+            elif self.colour == chess.BLACK and result[0] == '1':
+                return board, -999999
+            else:
+                return board, -100.0
+        elif depth == 0:
+            evals = self.evaluateBoardState(board)
+            if self.colour == chess.WHITE:
+                eval = evals[0] - evals[1]
+            elif self.colour == chess.BLACK:
+                eval = evals[1] - evals[0]
+            return board, eval
+
+        if maxPlayer:
+            maxEval = float('-inf')
+            for legalmove in board.legal_moves:
+                child_board = board.__copy__()
+                child_board.push(legalmove)
+
+                return_board, eval = self.miniMax(child_board, not maxPlayer, depth=depth-1)
+
+                if self.colour == chess.WHITE:
+                    if child_board.is_check():
+                        eval += 0.55
+                elif self.colour == chess.BLACK:
+                    if child_board.is_check():
+                        eval += 0.55
+                else:
+                    eval = 0
+
+                if eval > maxEval:
+                    maxEval = eval
+                    best_board = child_board
+            print(self.getOrderedMoves(best_board, self.colour))
+            return best_board, maxEval
+
+        elif not maxPlayer:
+            minEval = float('inf')
+            for legalmove in board.legal_moves:
+                child_board = board.__copy__()
+                child_board.push(legalmove)
+                # eval = self.evaluateBoardState(child_board)
+
+                return_board, eval = self.miniMax(child_board, not maxPlayer, depth=depth-1)
+                if self.colour != chess.WHITE:
+                    pass
+                elif self.colour != chess.BLACK:
+                    pass
+
+                if eval < minEval:
+                    minEval = eval
+                    best_board = return_board
+            return best_board, minEval
 
 class AlphaBetaPlayer(object):
     def __init__(self, board, colour, depth=2):
@@ -126,12 +231,12 @@ if __name__ == "__main__":
             print(entry.move, entry.weight, entry.learn)
 
 
-    white = AlphaBetaPlayer(realtimeboard, chess.WHITE, depth=1)
+    white = OrderedMiniMax(realtimeboard, chess.WHITE, depth=2)
     black = RandomPlayer(realtimeboard, chess.BLACK)
 
     blk_total_score = 0
     wht_total_score = 0
-    num_games = 5
+    num_games = 1
 
     start = datetime.now()
     game_times = []

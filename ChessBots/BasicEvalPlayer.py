@@ -1,7 +1,8 @@
 import chess
 
-class BasicEvalPlayer(object):
+class Player(object):
     def __init__(self, board, colour):
+        print('init')
         self.colour = colour
         self.current_board = board
         self.legal_moves = []

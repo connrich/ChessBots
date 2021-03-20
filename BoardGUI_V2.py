@@ -3,13 +3,16 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 import sys
+import os
+import importlib
 import math
 import chess
 from Board import Board
 from Bots import RandomPlayer, BasicEvalPlayer, MiniMaxPlayer
-from ChessTest import AlphaBetaPlayer
+from ChessTest import OrderedMiniMax
 from datetime import datetime
 import time
+import ChessBots
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -24,6 +27,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.move_timer.setInterval(200)
         self.move_timer.timeout.connect(self.takeTurn)
 
+    def loadPlayers(self, combobox):
+        self.Bots = {}
+        # Iterates through ChessBots folder and extracts Player classes
+        for filename in os.listdir('ChessBots'):
+            if filename.endswith('.py') and filename[0] != '_':
+                filename = filename[:-3]
+                mymodule = importlib.import_module('ChessBots.' + filename)
+                self.Bots[filename] = mymodule.Player
+                combobox.addItem(filename)
+
     def initBoard(self):
         self.board = Board()
         self.setCentralWidget(self.board)
@@ -33,13 +46,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self.DockWidget.setWindowTitle('Game Controls')
         self.DockWidget.setFeatures(QDockWidget.NoDockWidgetFeatures)
         self.dock_widget = QtWidgets.QWidget()
+        self.DockWidget.setWidget(self.dock_widget)
+        self.dock_layout = QtWidgets.QVBoxLayout()
+        self.dock_widget.setLayout(self.dock_layout)
+
+        white_label = QLabel('White:')
+        white_label.setMaximumHeight(10)
+        self.dock_layout.addWidget(white_label)
+        self.WhiteComboBox = QComboBox()
+        self.loadPlayers(self.WhiteComboBox)
+        self.dock_layout.addWidget(self.WhiteComboBox)
+
+        black_label = QLabel('Black:')
+        black_label.setMaximumHeight(10)
+        self.dock_layout.addWidget(black_label)
+        self.BlackComboBox = QComboBox()
+        self.loadPlayers(self.BlackComboBox)
+        self.dock_layout.addWidget(self.BlackComboBox)
+
+        self.startGameButton = QPushButton('Start Game')
+        self.dock_layout.addWidget(self.startGameButton)
 
         self.play_button = QtWidgets.QPushButton()
         self.play_button.setIcon(QtGui.QIcon('Assets/play_icon.png'))
-        self.dock_layout = QtWidgets.QVBoxLayout()
         self.dock_layout.addWidget(self.play_button)
-        self.dock_widget.setLayout(self.dock_layout)
-        self.DockWidget.setWidget(self.dock_widget)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.DockWidget)
         self.play_button.clicked.connect(self.play_pause)
 
@@ -51,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.forward = QPushButton()
         self.forward.setIcon(QIcon('Assets/forward_arrow'))
         self.direction_layout.addWidget(self.forward)
-        self.forward.clicked.connect(self.board.takeTurn)
+        self.forward.clicked.connect(self.board.nextTurn)
 
         self.direction_widget = QWidget()
         self.direction_widget.setLayout(self.direction_layout)
@@ -83,7 +113,7 @@ class Referee(object):
     def __init__(self):
         self.realtimeboard = chess.Board()
         self.white = MiniMaxPlayer(self.realtimeboard, chess.WHITE, depth=3)
-        self.black = RandomPlayer(self.realtimeboard, chess.BLACK)
+        self.black = OrderedMiniMax(self.realtimeboard, chess.BLACK)
 
     def takeTurn(self):
         if self.realtimeboard.turn == chess.WHITE:
